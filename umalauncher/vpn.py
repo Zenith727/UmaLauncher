@@ -227,17 +227,30 @@ class OpenVPNClient(VPNClient):
         self.cygames = cygames
         self.timeout = 30
         self.log_path = util.get_appdata('ovpn.log')
+        
 
         if os.path.exists(self.log_path):
             os.remove(self.log_path)
 
     def _connect(self):
+        route = """
+                route-nopull
+
+                route api-umamusume.cygames.jp
+                route prd-storage-umamusume.akamaized.net
+                route prd-storage-app-umamusume.akamaized.net
+                route prd-storage-game-umamusume.akamaized.net
+                route prd-info-umamusume.akamaized.net
+
+                route apidgp-gameplayer.games.dmm.com
+
+                """
         if not self.profile_override:
             ovpn = self._determine_vpngate_server(cygames=self.cygames)
 
             if not ovpn:
                 return False
-
+            ovpn += route
             with open(self.ovpn_path, 'w', encoding='utf-8') as f:
                 f.write(ovpn)
 
