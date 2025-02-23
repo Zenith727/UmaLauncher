@@ -229,8 +229,8 @@ class ScreenStateHandler():
         except Exception:
             util.show_error_box("Critical Error", "Uma Launcher has encountered a critical error and will now close.")
             self.threader.stop()
-    def reconnectvpn(self):
-        logger.info("reconnecting vpn")
+    def reconnect_vpn(self):
+        logger.info("Reconnecting VPN")
         self.vpn.disconnect()
         self.vpn = None
         if self.threader.settings["vpn_enabled"] and not self.threader.settings["vpn_dmm_only"]:
