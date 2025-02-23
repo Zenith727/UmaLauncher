@@ -7,7 +7,7 @@ import subprocess
 import traceback
 import random
 
-def create_client(threader, cygames=False):
+def create_client(threader, cygames=True):
     vpn_radiobutton_status = threader.settings['vpn_client']
 
     if vpn_radiobutton_status['OpenVPN']:
@@ -234,17 +234,19 @@ class OpenVPNClient(VPNClient):
 
     def _connect(self):
         route = """
-                route-nopull
+route-nopull
 
-                route api-umamusume.cygames.jp
-                route prd-storage-umamusume.akamaized.net
-                route prd-storage-app-umamusume.akamaized.net
-                route prd-storage-game-umamusume.akamaized.net
-                route prd-info-umamusume.akamaized.net
+route api-umamusume.cygames.jp
+route prd-storage-umamusume.akamaized.net
+route prd-storage-app-umamusume.akamaized.net
+route prd-storage-game-umamusume.akamaized.net
+route prd-info-umamusume.akamaized.net
 
-                route apidgp-gameplayer.games.dmm.com
+route api.ipify.org
+route api.myip.com
 
-                """
+route apidgp-gameplayer.games.dmm.com
+"""
         if not self.profile_override:
             ovpn = self._determine_vpngate_server(cygames=self.cygames)
 

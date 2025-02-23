@@ -229,7 +229,13 @@ class ScreenStateHandler():
         except Exception:
             util.show_error_box("Critical Error", "Uma Launcher has encountered a critical error and will now close.")
             self.threader.stop()
-
+    def reconnectvpn(self):
+        logger.info("reconnecting vpn")
+        self.vpn.disconnect()
+        self.vpn = None
+        if self.threader.settings["vpn_enabled"] and not self.threader.settings["vpn_dmm_only"]:
+            self.vpn = vpn.create_client(self.threader, cygames=True)
+            self.vpn.connect()
     def run(self):
         # If Carotene was enabled in the past, run the deprecation procedure.
         if "enable_english_patch" in self.threader.settings and self.threader.settings["enable_english_patch"]:
