@@ -26,7 +26,7 @@ class VPNClient:
 
     def _determine_vpngate_server(self, cygames=False):
         if not self.server_list:
-            logger.info('Requesting VPN server list from Umapyoi.net')
+            logger.info('Requesting VPN server list from umavpn.top')
 
             vpn_type = 'uma' if cygames else 'dmm'
 
@@ -109,7 +109,7 @@ class VPNClient:
                     break
                 self._after_ip_check()
                 time.sleep(2)
-
+                requests.get("https://api-umamusume.cygames.jp").status_code != 404
             if before_ip != after_ip:
                 total_success = True
                 break
