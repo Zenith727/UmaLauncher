@@ -28,20 +28,20 @@ class VPNClient:
         if not self.server_list:
             logger.info('Requesting VPN server list from Umapyoi.net')
 
-            vpn_type = 'cygames' if cygames else 'dmm'
+            vpn_type = 'uma' if cygames else 'dmm'
 
             # vpn_type = 'cygames'  # TODO: This is only to test if it becomes more reliable
 
             logger.info(f"Type: {vpn_type}")
 
-            r = requests.get(f'https://umapyoi.net/api/v1/vpn/{vpn_type}')
+            r = requests.get(f'https://api.umavpn.top/api/server?sites=dmm&sites=uma&take=10&orderBy=timestamp')
             r.raise_for_status()
 
             servers = r.json()
             if servers:
-                servers = servers[:5]
+                servers = servers["data"][:5]
                 random.shuffle(servers)
-                self.server_list = [server['_profile'] for server in servers]
+                self.server_list = [requests.get(f"https://api.umavpn.top/api/server/{server["ip"]}/config?variant=current&split").content.decode("utf-8") for server in servers]
 
             else:
                 logger.error('No VPN server found')
@@ -50,7 +50,6 @@ class VPNClient:
         
         selected_server = self.server_list.pop(0)
         self.server_list.append(selected_server)
-
         return selected_server
 
 
@@ -184,12 +183,13 @@ class SoftEtherClient(VPNClient):
             if not ovpn_config:
                 return False
             
-            for line in ovpn_config.split("\n"):
+            for line in ovpn_config.splitlines(): #.split("\n") is okay, .splitlines is better.
                 line = line.strip()
                 if line and not line.startswith("#") and line.startswith("remote "):
                     _, ip, port = line.split(" ", 2)
-                    ip = f"{ip}:{port}"
-                    break
+                    ip_port = f"{ip}:{port}"  # Combine IP and port
+                    print(ip_port)
+                    break #stop after first "remote" found.
 
             if not ip:
                 util.show_warning_box('VPN connection failed', 'VPN connection failed.<br>The fetched OpenVPN config does not have a remote IP.')
@@ -234,18 +234,8 @@ class OpenVPNClient(VPNClient):
 
     def _connect(self):
         route = """
-route-nopull
-
-route api-umamusume.cygames.jp
-route prd-storage-umamusume.akamaized.net
-route prd-storage-app-umamusume.akamaized.net
-route prd-storage-game-umamusume.akamaized.net
-route prd-info-umamusume.akamaized.net
-
 route api.ipify.org
 route api.myip.com
-
-route apidgp-gameplayer.games.dmm.com
 """
         if not self.profile_override:
             ovpn = self._determine_vpngate_server(cygames=self.cygames)
@@ -255,7 +245,6 @@ route apidgp-gameplayer.games.dmm.com
             ovpn += route
             with open(self.ovpn_path, 'w', encoding='utf-8') as f:
                 f.write(ovpn)
-
             cmd = [self.exe_path, '--config', self.ovpn_path]
 
         else:
@@ -274,7 +263,7 @@ route apidgp-gameplayer.games.dmm.com
         logger.debug(f"cmd: {cmd}")
         
         self.ovpn_process = subprocess.Popen(cmd, creationflags=subprocess.CREATE_NO_WINDOW)
-        # self.ovpn_process = subprocess.Popen(cmd)
+        #self.ovpn_process = subprocess.Popen(cmd)
 
         return True
 
