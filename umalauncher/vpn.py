@@ -34,7 +34,7 @@ class VPNClient:
 
             logger.info(f"Type: {vpn_type}")
 
-            r = requests.get(f'https://api.umavpn.top/api/server?sites=dmm&sites=uma&take=10&orderBy=timestamp')
+            r = requests.get(f'https://api.umavpn.top/api/server?sites=dmm&sites=uma&take=20&orderBy=timestamp')
             r.raise_for_status()
 
             servers = r.json()
@@ -80,6 +80,7 @@ class VPNClient:
         before_ip = self._get_ip()
         check_start_time = time.time()
         total_success = False
+        statuscodeapi = 0
         while time.time() - check_start_time < 120:
             try:
                 success = self._connect()
@@ -99,14 +100,16 @@ class VPNClient:
                 b_ip_check_time = time.time()
                 after_ip = self._get_ip()
                 a_ip_check_time = time.time()
-                statuscodeapi = 0
+                
 
                 if a_ip_check_time - b_ip_check_time > 10:
                     # Changing connection makes it take longer to get the IP
                     # Ensure we actually get the latest IP
                     after_ip = self._get_ip()
                     try:
-                        statuscodeapi = requests.get("https://api-umamusume.cygames.jp").status_code
+                        logger.info("checking vpn connection")
+                        statuscodeapi = requests.get("https://api-umamusume.cygames.jp", timeout=5).status_code
+                        logger.info(statuscodeapi)
                     except Exception as e:
                         logger.error(e)
                 if before_ip != after_ip and statuscodeapi == 404:
@@ -114,7 +117,7 @@ class VPNClient:
                 self._after_ip_check()
                 time.sleep(2)
                 
-            if before_ip != after_ip:
+            if before_ip != after_ip and statuscodeapi == 404:
                 total_success = True
                 break
                 # logger.error('VPN connection failed')
@@ -240,6 +243,7 @@ class OpenVPNClient(VPNClient):
         route = """
 route api.ipify.org
 route api.myip.com
+route pointclub.dmm.com
 """
         if not self.profile_override:
             ovpn = self._determine_vpngate_server(cygames=self.cygames)
