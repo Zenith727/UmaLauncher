@@ -99,17 +99,21 @@ class VPNClient:
                 b_ip_check_time = time.time()
                 after_ip = self._get_ip()
                 a_ip_check_time = time.time()
+                statuscodeapi = 0
 
                 if a_ip_check_time - b_ip_check_time > 10:
                     # Changing connection makes it take longer to get the IP
                     # Ensure we actually get the latest IP
                     after_ip = self._get_ip()
-
-                if before_ip != after_ip:
+                    try:
+                        statuscodeapi = requests.get("https://api-umamusume.cygames.jp").status_code
+                    except Exception as e:
+                        logger.error(e)
+                if before_ip != after_ip and statuscodeapi == 404:
                     break
                 self._after_ip_check()
                 time.sleep(2)
-                requests.get("https://api-umamusume.cygames.jp").status_code != 404
+                
             if before_ip != after_ip:
                 total_success = True
                 break
